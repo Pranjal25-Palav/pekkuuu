@@ -1,0 +1,314 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="A lantern-night birthday countdown to 17 November.">
+<title>Lantern Night Countdown</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pinyon+Script&family=Cormorant+Garamond:wght@400;600&family=Jost:wght@400;500&display=swap">
+<style>
+/* Layout: one centered night-sky stage; canvas of rising lanterns and golden light threads behind a single countdown plate. */
+:root {
+  --sky-top: #0c1030;
+  --sky-bottom: #2a1b4d;
+  --gold: #ffc65a;
+  --gold-soft: #ffe2a3;
+  --ember: #ff8f3a;
+  --ink: #f6eedd;
+  --ink-dim: #b9b3cf;
+  --plate: rgba(16, 14, 42, 0.55);
+  --plate-line: rgba(255, 198, 90, 0.35);
+  --font-script: "Pinyon Script", "Snell Roundhand", cursive;
+  --font-num: "Cormorant Garamond", Georgia, serif;
+  --font-ui: "Jost", "Helvetica Neue", Arial, sans-serif;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { min-height: 100%; }
+body {
+  margin: 0;
+  background: linear-gradient(180deg, var(--sky-top) 0%, var(--sky-bottom) 70%, #4a2a55 100%);
+  background-color: var(--sky-top);
+  background-attachment: fixed;
+  color: var(--ink);
+  font-family: var(--font-ui);
+  padding-block: 32px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  overflow-x: hidden;
+}
+#sky { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
+main {
+  position: relative; z-index: 1;
+  max-width: 760px; margin: 0 auto;
+  display: flex; flex-direction: column; align-items: center; gap: 28px;
+  text-align: center;
+}
+.eyebrow {
+  margin: 0; font-size: 0.8rem; letter-spacing: 0.28em; text-transform: uppercase; color: var(--gold-soft);
+}
+h1 {
+  margin: 0; font-family: var(--font-script); font-weight: 400;
+  font-size: clamp(2.8rem, 11vw, 5.6rem); line-height: 1.05; color: var(--gold);
+  text-shadow: 0 0 28px rgba(255, 170, 60, 0.55); text-wrap: balance;
+}
+.sub { margin: 0; max-width: 34ch; color: var(--ink-dim); font-size: 1.05rem; line-height: 1.55; text-wrap: balance; }
+.plate {
+  width: 100%; padding: 28px 16px 24px;
+  background: var(--plate); border: 1px solid var(--plate-line); border-radius: 28px;
+  backdrop-filter: blur(6px);
+  box-shadow: 0 0 60px rgba(255, 150, 50, 0.14), inset 0 0 40px rgba(255, 198, 90, 0.06);
+}
+.units { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin: 0; padding: 0; list-style: none; }
+.unit { display: flex; flex-direction: column; align-items: center; gap: 6px; min-width: 0; }
+.num {
+  font-family: var(--font-num); font-weight: 600; font-size: clamp(2.2rem, 10vw, 4.4rem); line-height: 1;
+  color: var(--gold-soft); font-variant-numeric: lining-nums tabular-nums;
+  text-shadow: 0 0 22px rgba(255, 170, 60, 0.45);
+}
+.lbl { font-size: 0.72rem; letter-spacing: 0.22em; text-transform: uppercase; color: var(--ink-dim); }
+.meter { margin-top: 26px; display: flex; flex-direction: column; gap: 10px; }
+.track { height: 6px; border-radius: 999px; background: rgba(255, 255, 255, 0.12); overflow: hidden; }
+.fill { height: 100%; width: 0%; border-radius: 999px; background: linear-gradient(90deg, var(--ember), var(--gold)); box-shadow: 0 0 14px var(--gold); transition: width 1.2s ease; }
+.meter p { margin: 0; font-size: 0.85rem; color: var(--ink-dim); letter-spacing: 0.04em; font-variant-numeric: tabular-nums; }
+.date { font-family: var(--font-num); font-size: 1.35rem; color: var(--ink); margin: 0; }
+.date b { color: var(--gold); font-weight: 600; }
+.launch {
+  font: inherit; font-weight: 500; letter-spacing: 0.08em; color: #2a1500; cursor: pointer;
+  background: linear-gradient(180deg, var(--gold-soft), var(--gold)); border: 0; border-radius: 999px;
+  padding: 12px 26px; box-shadow: 0 0 24px rgba(255, 170, 60, 0.45);
+}
+.launch:hover { filter: brightness(1.08); }
+.launch:focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; }
+@media (max-width: 420px) {
+  .units { gap: 6px; }
+  .lbl { letter-spacing: 0.12em; font-size: 0.64rem; }
+}
+</style>
+</head>
+<body>
+
+<canvas id="sky" aria-hidden="true"></canvas>
+
+<main>
+  <p class="eyebrow">Lantern night</p>
+  <h1 id="headline">A birthday is rising</h1>
+  <p class="sub" id="sub">The sky will be full of light on the 17th of November.</p>
+
+  <section class="plate" aria-label="Countdown to 17 November">
+    <ul class="units" role="timer" aria-live="off">
+      <li class="unit"><span class="num" id="d">00</span><span class="lbl">Days</span></li>
+      <li class="unit"><span class="num" id="h">00</span><span class="lbl">Hours</span></li>
+      <li class="unit"><span class="num" id="m">00</span><span class="lbl">Minutes</span></li>
+      <li class="unit"><span class="num" id="s">00</span><span class="lbl">Seconds</span></li>
+    </ul>
+    <div class="meter">
+      <div class="track"><div class="fill" id="fill"></div></div>
+      <p id="meterText">Counting from 18 October</p>
+    </div>
+  </section>
+
+  <p class="date"><b>17 November</b> &middot; Tuesday</p>
+  <button class="launch" id="launch" type="button">Release more lanterns</button>
+</main>
+
+<script>
+(function () {
+  var now = new Date();
+  var year = now.getFullYear();
+  var target = new Date(year, 10, 17, 0, 0, 0);
+  var start = new Date(2026, 9, 18, 0, 0, 0);
+  if (now.getTime() > target.getTime() + 86400000) {
+    year += 1;
+    target = new Date(year, 10, 17, 0, 0, 0);
+    start = new Date(year, 9, 18, 0, 0, 0);
+  }
+  var dayName = target.toLocaleDateString('en-GB', { weekday: 'long' });
+  document.querySelector('.date').innerHTML = '<b>17 November ' + year + '</b> &middot; ' + dayName;
+
+  function pad(n) { return String(n).padStart(2, '0'); }
+  var el = {
+    d: document.getElementById('d'), h: document.getElementById('h'),
+    m: document.getElementById('m'), s: document.getElementById('s'),
+    fill: document.getElementById('fill'), text: document.getElementById('meterText'),
+    head: document.getElementById('headline'), sub: document.getElementById('sub')
+  };
+
+  function tick() {
+    var diff = target.getTime() - Date.now();
+    if (diff <= 0) {
+      el.d.textContent = el.h.textContent = el.m.textContent = el.s.textContent = '00';
+      el.head.textContent = 'Happy Birthday';
+      el.sub.textContent = 'The lanterns are up. Make a wish.';
+      el.fill.style.width = '100%';
+      el.text.textContent = 'The day is here';
+      return;
+    }
+    var total = Math.floor(diff / 1000);
+    el.d.textContent = pad(Math.floor(total / 86400));
+    el.h.textContent = pad(Math.floor(total % 86400 / 3600));
+    el.m.textContent = pad(Math.floor(total % 3600 / 60));
+    el.s.textContent = pad(total % 60);
+    var span = target.getTime() - start.getTime();
+    var done = Math.min(1, Math.max(0, (Date.now() - start.getTime()) / span));
+    el.fill.style.width = (done * 100).toFixed(1) + '%';
+    var daysLeft = Math.ceil(diff / 86400000);
+    el.text.textContent = daysLeft + (daysLeft === 1 ? ' night' : ' nights') + ' to go';
+  }
+  tick();
+  setInterval(tick, 1000);
+
+  /* Sky: stars, golden light threads and rising lanterns */
+  var canvas = document.getElementById('sky');
+  var ctx = canvas.getContext('2d');
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var W = 0, H = 0, dpr = 1, stars = [], lanterns = [], threads = [];
+
+  function resize() {
+    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    W = window.innerWidth; H = window.innerHeight;
+    canvas.width = W * dpr; canvas.height = H * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    stars = [];
+    var count = Math.floor(W * H / 5000);
+    for (var i = 0; i < count; i++) {
+      stars.push({ x: Math.random() * W, y: Math.random() * H, r: Math.random() * 1.2 + 0.2, p: Math.random() * 6.28, sp: Math.random() * 0.02 + 0.005 });
+    }
+    threads = [];
+    var perSide = W < 600 ? 5 : 9;
+    var reach = W < 600 ? 34 : Math.min(150, W * 0.1);
+    for (var side = -1; side <= 1; side += 2) {
+      for (var k = 0; k < perSide; k++) {
+        threads.push({
+          side: side,
+          base: 4 + (k / perSide) * reach * 0.55,
+          amp: reach * (0.25 + Math.random() * 0.45),
+          freq: 0.006 + Math.random() * 0.006,
+          speed: 0.0005 + Math.random() * 0.0007,
+          phase: Math.random() * 6.28,
+          alpha: 0.28 + Math.random() * 0.3
+        });
+      }
+    }
+  }
+
+  function drawThreads(t) {
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    for (var i = 0; i < threads.length; i++) {
+      var th = threads[i];
+      for (var pass = 0; pass < 2; pass++) {
+        ctx.beginPath();
+        for (var y = -10; y <= H + 10; y += 10) {
+          var grow = 0.35 + 0.65 * (y / H);
+          var off = th.base + th.amp * grow * (1 + Math.sin(y * th.freq + t * th.speed + th.phase)) * 0.5;
+          var x = th.side < 0 ? off : W - off;
+          if (y === -10) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+        }
+        if (pass === 0) {
+          ctx.lineWidth = 5;
+          ctx.strokeStyle = 'rgba(255,170,60,' + (th.alpha * 0.14) + ')';
+        } else {
+          ctx.lineWidth = 1.2;
+          ctx.strokeStyle = 'rgba(255,214,130,' + th.alpha + ')';
+        }
+        ctx.stroke();
+      }
+    }
+    ctx.restore();
+  }
+
+  function makeLantern(fromBottom) {
+    var size = Math.random() * 16 + 12;
+    return {
+      x: Math.random() * W,
+      y: fromBottom ? H + size * 2 + Math.random() * 120 : Math.random() * H,
+      size: size,
+      vy: Math.random() * 0.35 + 0.15,
+      sway: Math.random() * 6.28,
+      swayAmp: Math.random() * 0.4 + 0.15,
+      flick: Math.random() * 6.28
+    };
+  }
+
+  function drawLantern(l, t) {
+    var s = l.size, w = s, h = s * 1.35;
+    var flicker = 0.85 + Math.sin(t * 0.004 + l.flick) * 0.15;
+    var fade = Math.min(1, Math.max(0.25, l.y / (H * 0.35)));
+    ctx.save();
+    ctx.translate(l.x, l.y);
+    ctx.globalAlpha = fade;
+    var glow = ctx.createRadialGradient(0, 0, 0, 0, 0, s * 3.2);
+    glow.addColorStop(0, 'rgba(255,170,60,' + (0.45 * flicker) + ')');
+    glow.addColorStop(1, 'rgba(255,170,60,0)');
+    ctx.fillStyle = glow;
+    ctx.beginPath(); ctx.arc(0, 0, s * 3.2, 0, 6.2832); ctx.fill();
+    var body = ctx.createLinearGradient(0, -h / 2, 0, h / 2);
+    body.addColorStop(0, '#ffe9b0');
+    body.addColorStop(0.55, '#ffb347');
+    body.addColorStop(1, '#e8691f');
+    ctx.fillStyle = body;
+    ctx.beginPath();
+    ctx.moveTo(-w * 0.42, -h / 2);
+    ctx.lineTo(w * 0.42, -h / 2);
+    ctx.lineTo(w * 0.55, h / 2);
+    ctx.lineTo(-w * 0.55, h / 2);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = 'rgba(120,40,0,0.35)';
+    ctx.fillRect(-w * 0.45, h * 0.1, w * 0.9, 1.2);
+    ctx.fillStyle = 'rgba(255,255,220,' + (0.7 * flicker) + ')';
+    ctx.beginPath(); ctx.ellipse(0, h * 0.25, w * 0.18, h * 0.22, 0, 0, 6.2832); ctx.fill();
+    ctx.restore();
+  }
+
+  function frame(t) {
+    ctx.clearRect(0, 0, W, H);
+    for (var i = 0; i < stars.length; i++) {
+      var st = stars[i];
+      var a = 0.45 + Math.sin(t * st.sp + st.p) * 0.4;
+      ctx.fillStyle = 'rgba(255,244,214,' + Math.max(0.05, a) + ')';
+      ctx.beginPath(); ctx.arc(st.x, st.y, st.r, 0, 6.2832); ctx.fill();
+    }
+    drawThreads(reduce ? 0 : t);
+    for (var j = 0; j < lanterns.length; j++) {
+      var l = lanterns[j];
+      if (!reduce) {
+        l.y -= l.vy;
+        l.x += Math.sin(t * 0.0006 + l.sway) * l.swayAmp;
+        if (l.y < -l.size * 4) { lanterns[j] = makeLantern(true); continue; }
+      }
+      drawLantern(l, t);
+    }
+    if (!reduce) requestAnimationFrame(frame);
+  }
+
+  function init() {
+    resize();
+    var n = W < 600 ? 12 : 22;
+    lanterns = [];
+    for (var i = 0; i < n; i++) lanterns.push(makeLantern(false));
+    if (reduce) frame(0);
+  }
+
+  window.addEventListener('resize', function () { resize(); if (reduce) frame(0); });
+  init();
+  if (!reduce) requestAnimationFrame(frame);
+
+  document.getElementById('launch').addEventListener('click', function () {
+    for (var i = 0; i < 10; i++) {
+      var l = makeLantern(true);
+      l.y = H + Math.random() * 60;
+      l.vy += 0.25;
+      lanterns.push(l);
+    }
+    if (lanterns.length > 70) lanterns.splice(0, lanterns.length - 70);
+    if (reduce) frame(0);
+  });
+})();
+</script>
+</body>
+</html>
